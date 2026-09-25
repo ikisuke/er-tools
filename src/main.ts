@@ -2,6 +2,7 @@ import mermaid from "mermaid";
 import "./style.css";
 import { buildDefinitionIndex, loadGroups, resolveLinks, type DefinitionIndex, type LinkTarget, type LoadedGroup } from "./links";
 import { entityIdFromNodeId } from "./svg";
+import { mermaidConfig, type ColorScheme } from "./theme";
 
 interface DiagramBundle {
   groups: { name: string; file: string; source: string }[];
@@ -12,6 +13,8 @@ const groupSelect = document.querySelector<HTMLSelectElement>("#group-select")!;
 const viewport = document.querySelector<HTMLElement>("#viewport")!;
 const statusEl = document.querySelector<HTMLElement>("#status")!;
 const diagramEl = document.querySelector<HTMLElement>("#diagram")!;
+const cardTitle = document.querySelector<HTMLElement>("#card-title")!;
+const cardFile = document.querySelector<HTMLElement>("#card-file")!;
 const warningsEl = document.querySelector<HTMLElement>("#warnings")!;
 const chooser = document.querySelector<HTMLDialogElement>("#chooser")!;
 const chooserTitle = document.querySelector<HTMLElement>("#chooser-title")!;
@@ -21,7 +24,16 @@ let groups: LoadedGroup[] = [];
 let index: DefinitionIndex = new Map();
 let renderSeq = 0;
 
-mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "default", er: { useMaxWidth: false } });
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const colorScheme = (): ColorScheme => (darkQuery.matches ? "dark" : "light");
+
+mermaid.initialize(mermaidConfig(colorScheme()));
+darkQuery.addEventListener("change", () => {
+  mermaid.initialize(mermaidConfig(colorScheme()));
+  const loc = readLocation();
+  if (loc.group) void show(loc.group, loc.entity);
+});
 
 function readLocation(): { group?: string; entity?: string } {
   const params = new URLSearchParams(location.hash.slice(1));
@@ -46,11 +58,15 @@ async function show(groupName: string, entity?: string) {
   const group = groups.find((g) => g.name === groupName);
   if (!group) {
     diagramEl.replaceChildren();
+    cardTitle.textContent = "—";
+    cardFile.textContent = "";
     setStatus(`グループ「${groupName}」は見つかりません。上の一覧から選んでください。`, "error");
     groupSelect.value = "";
     return;
   }
   groupSelect.value = group.name;
+  cardTitle.textContent = group.name;
+  cardFile.textContent = group.file ?? "";
   document.title = `${group.name} — ER ビューア`;
 
   const seq = ++renderSeq;
@@ -123,7 +139,21 @@ function follow(entity: string, target: LinkTarget) {
       const li = document.createElement("li");
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = name;
+      button.className = "chooser-option";
+      const label = document.createElement("span");
+      label.className = "chooser-option-name";
+      label.textContent = name;
+      const hint = document.createElement("span");
+      hint.className = "chooser-option-hint";
+      hint.textContent = "このグループの図へ移動";
+      const arrow = document.createElement("span");
+      arrow.className = "chooser-option-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.textContent = "→";
+      const text = document.createElement("span");
+      text.className = "chooser-option-text";
+      text.append(label, hint);
+      button.append(text, arrow);
       button.addEventListener("click", () => {
         chooser.close();
         navigate(name, entity);
@@ -139,12 +169,13 @@ function revealEntity(entity: string) {
   const node = entityNodes().get(entity);
   if (!node) return;
   node.classList.add("er-target");
+  node.parentNode?.append(node);
   const box = node.getBoundingClientRect();
   const view = viewport.getBoundingClientRect();
   viewport.scrollTo({
     left: viewport.scrollLeft + box.left - view.left - (view.width - box.width) / 2,
     top: viewport.scrollTop + box.top - view.top - (view.height - box.height) / 2,
-    behavior: "smooth",
+    behavior: reducedMotion.matches ? "auto" : "smooth",
   });
 }
 

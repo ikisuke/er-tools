@@ -3,6 +3,7 @@ import { parseErDiagram, type ParsedDiagram } from "./parse";
 export interface DiagramGroup {
   name: string;
   source: string;
+  file?: string;
 }
 
 export interface LoadedGroup extends DiagramGroup {
