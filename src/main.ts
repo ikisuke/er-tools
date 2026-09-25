@@ -2,7 +2,7 @@ import mermaid from "mermaid";
 import "./style.css";
 import { buildDefinitionIndex, loadGroups, resolveLinks, type DefinitionIndex, type LinkTarget, type LoadedGroup } from "./links";
 import { entityIdFromNodeId } from "./svg";
-import { mermaidConfig, type ColorScheme } from "./theme";
+import { mermaidConfig } from "./theme";
 
 interface DiagramBundle {
   groups: { name: string; file: string; source: string }[];
@@ -24,16 +24,9 @@ let groups: LoadedGroup[] = [];
 let index: DefinitionIndex = new Map();
 let renderSeq = 0;
 
-const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-const colorScheme = (): ColorScheme => (darkQuery.matches ? "dark" : "light");
 
-mermaid.initialize(mermaidConfig(colorScheme()));
-darkQuery.addEventListener("change", () => {
-  mermaid.initialize(mermaidConfig(colorScheme()));
-  const loc = readLocation();
-  if (loc.group) void show(loc.group, loc.entity);
-});
+mermaid.initialize(mermaidConfig());
 
 function readLocation(): { group?: string; entity?: string } {
   const params = new URLSearchParams(location.hash.slice(1));
