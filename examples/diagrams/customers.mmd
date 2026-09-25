@@ -1,0 +1,16 @@
+%% 顧客グループ: 顧客と連絡先
+erDiagram
+    CUSTOMER {
+        int id PK
+        string name
+        string email
+        datetime created_at
+    }
+    ADDRESS {
+        int id PK
+        int customer_id FK
+        string postal_code
+        string line1
+    }
+    CUSTOMER ||--o{ ADDRESS : "has"
+    CUSTOMER ||--o{ ORDER : "places"

@@ -1,0 +1,21 @@
+%% 注文グループ: 注文と明細
+%% PAYMENT はどのグループでも定義されていない（リンクにならない例）
+erDiagram
+    ORDER {
+        int id PK
+        int customer_id FK
+        int shipping_address_id FK
+        string status
+        datetime ordered_at
+    }
+    ORDER_LINE {
+        int order_id PK, FK
+        int line_no PK
+        int product_id FK
+        int quantity
+    }
+    CUSTOMER ||--o{ ORDER : "places"
+    ORDER ||--|{ ORDER_LINE : "contains"
+    PRODUCT ||--o{ ORDER_LINE : "ordered as"
+    ADDRESS |o--o{ ORDER : "ships to (fk_order_address)"
+    ORDER ||--o| PAYMENT : "paid by"
