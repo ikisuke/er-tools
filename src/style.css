@@ -1,0 +1,249 @@
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --border: #dde1e7;
+  --text: #1f2933;
+  --muted: #5f6b7a;
+  --link: #2563eb;
+  --link-soft: #dbeafe;
+  --target: #f59e0b;
+  --error: #b42318;
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.group-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.group-picker select {
+  min-width: 12rem;
+  padding: 0.4rem 0.6rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.legend-swatch {
+  flex: none;
+  width: 1.4rem;
+  height: 0.9rem;
+  border: 2px dashed var(--link);
+  border-radius: 3px;
+  background: var(--link-soft);
+}
+
+.warnings {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.85rem;
+  color: #7a4b00;
+  background: #fff7e6;
+  border-bottom: 1px solid #f5d9a8;
+}
+
+.warnings p {
+  margin: 0.15rem 0;
+}
+
+.viewport {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  outline: none;
+}
+
+.status {
+  margin: 2rem auto;
+  max-width: 40rem;
+  padding: 1rem 1.25rem;
+  text-align: center;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.status.error {
+  color: var(--error);
+  border-color: #f4c7c3;
+  background: #fef3f2;
+  white-space: pre-wrap;
+  text-align: left;
+}
+
+.diagram {
+  display: inline-block;
+  min-width: 100%;
+  padding: 1.5rem;
+}
+
+.diagram svg {
+  display: block;
+  margin: 0 auto;
+  max-width: none;
+}
+
+.diagram g.er-link {
+  cursor: pointer;
+}
+
+.diagram g.er-link :is(rect, path, polygon) {
+  fill: var(--link-soft) !important;
+  stroke: var(--link) !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: 6 3;
+}
+
+.diagram g.er-link text,
+.diagram g.er-link .nodeLabel {
+  fill: var(--link) !important;
+  color: var(--link) !important;
+  text-decoration: underline;
+}
+
+.diagram g.er-link:hover :is(rect, path, polygon),
+.diagram g.er-link:focus-visible :is(rect, path, polygon) {
+  fill: #bfdbfe !important;
+}
+
+.diagram g.er-link:focus {
+  outline: none;
+}
+
+.diagram g.er-target :is(rect, path, polygon) {
+  stroke: var(--target) !important;
+  stroke-width: 4px !important;
+  animation: er-pulse 1.2s ease-in-out 3;
+}
+
+@keyframes er-pulse {
+  50% {
+    stroke-width: 8px;
+  }
+}
+
+.chooser {
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  box-shadow: 0 20px 50px rgb(15 23 42 / 0.2);
+}
+
+.chooser::backdrop {
+  background: rgb(15 23 42 / 0.35);
+}
+
+.chooser h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.chooser p {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.chooser-options {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.chooser button {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  font: inherit;
+  text-align: left;
+  color: var(--link);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.chooser button:hover,
+.chooser button:focus-visible {
+  border-color: var(--link);
+  background: var(--link-soft);
+}
+
+.chooser-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.chooser-actions button.secondary {
+  width: auto;
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 0.6rem 0.9rem;
+  }
+
+  .group-picker {
+    flex: 1 1 100%;
+  }
+
+  .group-picker select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .diagram {
+    padding: 0.75rem;
+  }
+}
