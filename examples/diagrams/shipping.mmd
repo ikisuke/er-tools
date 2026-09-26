@@ -1,0 +1,30 @@
+%% 配送グループ: 倉庫と出荷
+%% ADDRESS は customers でも定義されている（リンク先が一意に決まらない例）
+erDiagram
+    WAREHOUSE {
+        int id PK
+        string name
+        int address_id FK
+    }
+    ADDRESS {
+        int id PK
+        string postal_code
+        string line1
+        string country
+    }
+    STOCK {
+        int warehouse_id PK, FK
+        int product_id PK, FK
+        int quantity
+    }
+    SHIPMENT {
+        int id PK
+        int order_id FK
+        int warehouse_id FK
+        datetime shipped_at
+    }
+    WAREHOUSE ||--|| ADDRESS : "located at"
+    WAREHOUSE ||--o{ STOCK : "holds"
+    WAREHOUSE ||--o{ SHIPMENT : "ships"
+    ORDER ||--o{ SHIPMENT : "fulfilled by"
+    PRODUCT ||--o{ STOCK : "stocked as"

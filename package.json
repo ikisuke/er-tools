@@ -1,0 +1,22 @@
+{
+  "name": "er-viewer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 47321",
+    "build": "tsc && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 47322",
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.2"
+  },
+  "dependencies": {
+    "mermaid": "^12.0.0"
+  }
+}

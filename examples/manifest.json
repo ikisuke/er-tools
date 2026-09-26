@@ -1,0 +1,8 @@
+{
+  "groups": [
+    { "name": "顧客", "file": "diagrams/customers.mmd" },
+    { "name": "注文", "file": "diagrams/orders.mmd" },
+    { "name": "商品カタログ", "file": "diagrams/catalog.md" },
+    { "name": "配送", "file": "diagrams/shipping.mmd" }
+  ]
+}
