@@ -44,7 +44,26 @@
           <span class="card-mode">読み取り専用</span>
         </header>
         <div id="status" class="status">図を読み込んでいます…</div>
-        <div id="diagram" class="diagram"></div>
+        <div id="stage" class="stage">
+          <div id="diagram" class="diagram"></div>
+          <div class="zoom-controls" role="toolbar" aria-label="拡大縮小">
+            <button type="button" id="zoom-out" title="縮小（ホイールを手前に回しても縮小できます）">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M8 11h6M16 16l4 4" /></svg>
+              <span>縮小</span>
+            </button>
+            <span id="zoom-level" class="zoom-level" aria-live="polite">100%</span>
+            <button type="button" id="zoom-in" title="拡大（ホイールを奥に回しても拡大できます）">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M8 11h6M11 8v6M16 16l4 4" /></svg>
+              <span>拡大</span>
+            </button>
+            <span class="zoom-divider" aria-hidden="true"></span>
+            <button type="button" id="zoom-fit" title="図全体が収まるように表示">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
+              <span>全体表示</span>
+            </button>
+          </div>
+          <p class="stage-hint">ホイールで拡大縮小・ドラッグで移動</p>
+        </div>
       </section>
     </main>
 

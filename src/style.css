@@ -185,18 +185,18 @@ body {
 /* ---------- Canvas ---------- */
 
 .viewport {
+  display: flex;
   flex: 1;
-  overflow: auto;
+  min-height: 0;
   outline: none;
   padding: 1.25rem;
 }
 
 .canvas-card {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  width: max-content;
-  min-width: 100%;
-  min-height: 100%;
+  min-width: 0;
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -205,8 +205,6 @@ body {
 }
 
 .card-header {
-  position: sticky;
-  left: 0;
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -292,19 +290,119 @@ body {
   }
 }
 
-.diagram {
+.stage {
+  position: relative;
   flex: 1;
-  padding: 1.75rem 2rem 2rem;
+  min-height: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
   background-color: var(--surface);
   background-image: radial-gradient(var(--dots) 1px, transparent 1px);
   background-size: 18px 18px;
 }
 
+.stage[hidden] {
+  display: none;
+}
+
+.stage.panning {
+  cursor: grabbing;
+}
+
+.diagram {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.diagram.animating {
+  transition: transform 0.25s ease-out;
+}
+
 .diagram svg {
   display: block;
-  margin: 0 auto;
-  max-width: none;
   overflow: visible;
+}
+
+.zoom-controls {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  cursor: default;
+}
+
+.zoom-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  font: 600 0.78rem var(--font);
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.zoom-controls button:hover {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.zoom-controls button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-ring);
+}
+
+.zoom-controls svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.zoom-level {
+  min-width: 3.2rem;
+  font: 0.76rem var(--mono);
+  text-align: center;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.zoom-divider {
+  width: 1px;
+  height: 1.2rem;
+  margin: 0 0.15rem;
+  background: var(--border);
+}
+
+.stage-hint {
+  position: absolute;
+  left: 0.9rem;
+  bottom: 0.9rem;
+  margin: 0;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: rgb(255 255 255 / 0.85);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  pointer-events: none;
 }
 
 /* Cross-group link entities */
@@ -499,7 +597,8 @@ body {
     align-items: flex-start;
   }
 
-  .card-mode {
+  .card-mode,
+  .stage-hint {
     display: none;
   }
 
@@ -507,7 +606,4 @@ body {
     padding: 0.6rem;
   }
 
-  .diagram {
-    padding: 1rem;
-  }
 }

@@ -2,6 +2,7 @@ import mermaid from "mermaid";
 import "./style.css";
 import { buildDefinitionIndex, loadGroups, resolveLinks, type DefinitionIndex, type LinkTarget, type LoadedGroup } from "./links";
 import { entityIdFromNodeId } from "./svg";
+import { PanZoom } from "./panzoom";
 import { mermaidConfig } from "./theme";
 
 interface DiagramBundle {
@@ -10,7 +11,8 @@ interface DiagramBundle {
 }
 
 const groupSelect = document.querySelector<HTMLSelectElement>("#group-select")!;
-const viewport = document.querySelector<HTMLElement>("#viewport")!;
+const stage = document.querySelector<HTMLElement>("#stage")!;
+const zoomLevel = document.querySelector<HTMLElement>("#zoom-level")!;
 const statusEl = document.querySelector<HTMLElement>("#status")!;
 const diagramEl = document.querySelector<HTMLElement>("#diagram")!;
 const cardTitle = document.querySelector<HTMLElement>("#card-title")!;
@@ -24,9 +26,14 @@ let groups: LoadedGroup[] = [];
 let index: DefinitionIndex = new Map();
 let renderSeq = 0;
 
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
 mermaid.initialize(mermaidConfig());
+
+const panZoom = new PanZoom(stage, diagramEl, (view) => {
+  zoomLevel.textContent = `${Math.round(view.scale * 100)}%`;
+});
+document.querySelector("#zoom-in")!.addEventListener("click", () => panZoom.zoomIn());
+document.querySelector("#zoom-out")!.addEventListener("click", () => panZoom.zoomOut());
+document.querySelector("#zoom-fit")!.addEventListener("click", () => panZoom.fit());
 
 function readLocation(): { group?: string; entity?: string } {
   const params = new URLSearchParams(location.hash.slice(1));
@@ -43,6 +50,7 @@ function navigate(group: string, entity?: string) {
 
 function setStatus(message: string | null, kind: "info" | "error" = "info") {
   statusEl.hidden = message === null;
+  stage.hidden = message !== null && kind === "error";
   statusEl.textContent = message ?? "";
   statusEl.classList.toggle("error", kind === "error");
 }
@@ -68,6 +76,7 @@ async function show(groupName: string, entity?: string) {
     const { svg } = await mermaid.render(renderId(seq), group.source);
     if (seq !== renderSeq) return;
     diagramEl.innerHTML = svg;
+    setNaturalSize(diagramEl.querySelector("svg"));
     setStatus(null);
   } catch (err) {
     if (seq !== renderSeq) return;
@@ -77,8 +86,17 @@ async function show(groupName: string, entity?: string) {
   }
 
   decorateLinks(resolveLinks(group, index));
+  panZoom.fit(false);
   if (entity) revealEntity(entity);
-  else viewport.scrollTo({ top: 0, left: 0 });
+}
+
+/** Pins the SVG to its viewBox size so zooming is done only by the pan/zoom transform. */
+function setNaturalSize(svg: SVGSVGElement | null) {
+  const box = svg?.viewBox.baseVal;
+  if (!svg || !box || !box.width || !box.height) return;
+  svg.setAttribute("width", String(box.width));
+  svg.setAttribute("height", String(box.height));
+  svg.style.maxWidth = "none";
 }
 
 function renderId(seq: number): string {
@@ -163,13 +181,7 @@ function revealEntity(entity: string) {
   if (!node) return;
   node.classList.add("er-target");
   node.parentNode?.append(node);
-  const box = node.getBoundingClientRect();
-  const view = viewport.getBoundingClientRect();
-  viewport.scrollTo({
-    left: viewport.scrollLeft + box.left - view.left - (view.width - box.width) / 2,
-    top: viewport.scrollTop + box.top - view.top - (view.height - box.height) / 2,
-    behavior: reducedMotion.matches ? "auto" : "smooth",
-  });
+  panZoom.reveal(node);
 }
 
 function showWarnings(warnings: string[]) {
