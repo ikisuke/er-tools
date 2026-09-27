@@ -62,7 +62,17 @@
               <span>全体表示</span>
             </button>
           </div>
-          <p class="stage-hint">ホイールで拡大縮小・ドラッグで移動</p>
+          <p class="stage-hint">ホイールで拡大縮小・ドラッグで移動・点線の下線の列（enum）を押すと値を表示</p>
+          <div id="enum-popover" class="enum-popover" role="dialog" aria-labelledby="enum-popover-title" hidden>
+            <div class="enum-popover-header">
+              <span class="enum-popover-kicker">enum の値</span>
+              <button type="button" class="enum-popover-close" aria-label="閉じる">×</button>
+            </div>
+            <h3 id="enum-popover-title" class="enum-popover-title"></h3>
+            <p class="enum-popover-meta"></p>
+            <ul class="enum-values"></ul>
+            <p class="enum-popover-source"></p>
+          </div>
         </div>
       </section>
     </main>

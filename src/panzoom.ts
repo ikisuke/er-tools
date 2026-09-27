@@ -1,6 +1,7 @@
 import { centerOn, fitView, STEP, wheelFactor, zoomAt, type Size, type View } from "./zoom";
 
 const DRAG_THRESHOLD = 4;
+const OVERLAYS = ".zoom-controls, .enum-popover";
 
 /**
  * Wheel zoom and drag-to-pan for the element `content` inside `stage`.
@@ -83,7 +84,7 @@ export class PanZoom {
   }
 
   private onWheel(e: WheelEvent) {
-    if (!this.content.firstElementChild) return;
+    if (!this.content.firstElementChild || (e.target as Element).closest(OVERLAYS)) return;
     e.preventDefault();
     const rect = this.stage.getBoundingClientRect();
     const delta = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 16 : e.deltaY;
@@ -91,7 +92,7 @@ export class PanZoom {
   }
 
   private onPointerDown(e: PointerEvent) {
-    if (e.button !== 0 || this.drag || (e.target as Element).closest(".zoom-controls")) return;
+    if (e.button !== 0 || this.drag || (e.target as Element).closest(OVERLAYS)) return;
     this.drag = { id: e.pointerId, startX: e.clientX, startY: e.clientY, origin: this.view, active: false };
   }
 
