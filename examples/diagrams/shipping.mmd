@@ -21,6 +21,7 @@ erDiagram
         int id PK
         int order_id FK
         int warehouse_id FK
+        string carrier "配送業者 enum: yamato, sagawa, japan_post"
         datetime shipped_at
     }
     WAREHOUSE ||--|| ADDRESS : "located at"

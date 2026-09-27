@@ -5,7 +5,7 @@ erDiagram
         int id PK
         int customer_id FK
         int shipping_address_id FK
-        string status
+        string status "enum: pending, paid, shipped, cancelled"
         datetime ordered_at
     }
     ORDER_LINE {
