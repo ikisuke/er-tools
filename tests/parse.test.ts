@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractMermaid, parseErDiagram } from "../src/parse";
+import { extractMermaid, parseAttribute, parseEnumValues, parseErDiagram } from "../src/parse";
 
 describe("parseErDiagram", () => {
   it("separates entities with attribute blocks from relationship-only entities", () => {
@@ -97,5 +97,53 @@ describe("extractMermaid", () => {
     ].join("\n");
     expect(extractMermaid("doc.md", md)).toBe("erDiagram\n  A ||--o{ B : x\n");
     expect(extractMermaid("doc.md", "no diagram")).toBeNull();
+  });
+});
+
+describe("attributes and enum values", () => {
+  it("parses attribute rows with keys and comments", () => {
+    expect(parseAttribute('int order_id PK, FK "注文"')).toEqual({
+      type: "int",
+      name: "order_id",
+      keys: ["PK", "FK"],
+      comment: "注文",
+    });
+    expect(parseAttribute("varchar(255) name")).toEqual({ type: "varchar(255)", name: "name", keys: [] });
+    expect(parseAttribute("not an attribute row with many words")).toBeNull();
+  });
+
+  it("reads enum values from the comment", () => {
+    expect(parseEnumValues("enum: pending, paid, shipped")).toEqual(["pending", "paid", "shipped"]);
+    expect(parseEnumValues("配送業者 enum: yamato、sagawa, japan_post")).toEqual(["yamato", "sagawa", "japan_post"]);
+    expect(parseEnumValues("ENUM : a ,b,, c ")).toEqual(["a", "b", "c"]);
+  });
+
+  it("ignores comments without values after the marker", () => {
+    expect(parseEnumValues("注文の状態")).toBeNull();
+    expect(parseEnumValues("enum:")).toBeNull();
+    expect(parseEnumValues("enumeration of states")).toBeNull();
+  });
+
+  it("does not infer values from the type alone", () => {
+    expect(parseAttribute("enum status")?.enumValues).toBeUndefined();
+  });
+
+  it("collects attributes per entity, including one-line blocks, in written order", () => {
+    const parsed = parseErDiagram(`erDiagram
+      ORDER {
+        int id PK
+        string status "enum: pending, paid"
+      }
+      TAG { string kind "enum: a, b" }
+      EMPTY { }
+      ORDER ||--o{ LINE : has
+    `);
+    expect(parsed.attributes.get("ORDER")?.map((a) => [a.name, a.enumValues])).toEqual([
+      ["id", undefined],
+      ["status", ["pending", "paid"]],
+    ]);
+    expect(parsed.attributes.get("TAG")?.[0].enumValues).toEqual(["a", "b"]);
+    expect(parsed.attributes.get("EMPTY")).toEqual([]);
+    expect(parsed.attributes.has("LINE")).toBe(false);
   });
 });

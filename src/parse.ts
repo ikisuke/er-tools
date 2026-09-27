@@ -4,12 +4,23 @@ export interface Relationship {
   label: string;
 }
 
+export interface Attribute {
+  type: string;
+  name: string;
+  keys: string[];
+  comment?: string;
+  /** Values listed after `enum:` in the comment; absent when the comment has none. */
+  enumValues?: string[];
+}
+
 export interface ParsedDiagram {
   /** Entities written with an attribute block (`NAME { ... }`) in this diagram. */
   defined: Set<string>;
   /** Every entity identifier that appears in a relationship, in order of first appearance. */
   referenced: string[];
   relationships: Relationship[];
+  /** Attribute rows of each defined entity, in the order they are written. */
+  attributes: Map<string, Attribute[]>;
 }
 
 const IDENT = String.raw`(?:"[^"]*"|[\p{L}\p{N}_*][\p{L}\p{N}_\-*.]*)`;
@@ -27,6 +38,44 @@ const WORD_REL = new RegExp(
   "u",
 );
 const BLOCK_OPEN = new RegExp(String.raw`^(${IDENT})${ALIAS}\s*\{(.*)$`, "u");
+const KEY = String.raw`(?:PK|FK|UK)`;
+const ATTRIBUTE = new RegExp(
+  String.raw`^(\S+)\s+(\S+?)(?:\s+(${KEY}(?:\s*,\s*${KEY})*))?(?:\s+"([^"]*)")?$`,
+  "u",
+);
+const ENUM_MARKER = /\benum\s*:/i;
+
+/** Parses one attribute row (`type name [PK, FK] ["comment"]`) of an entity block. */
+export function parseAttribute(line: string): Attribute | null {
+  const m = ATTRIBUTE.exec(line.trim());
+  if (!m) return null;
+  const attribute: Attribute = {
+    type: m[1],
+    name: m[2],
+    keys: m[3] ? m[3].split(",").map((k) => k.trim()) : [],
+  };
+  if (m[4] !== undefined) {
+    attribute.comment = m[4];
+    const values = parseEnumValues(m[4]);
+    if (values) attribute.enumValues = values;
+  }
+  return attribute;
+}
+
+/**
+ * Reads enum values written in an attribute comment as `enum: a, b, c`.
+ * Text before `enum:` is a free description; values are separated by `,` or `、`.
+ */
+export function parseEnumValues(comment: string): string[] | null {
+  const marker = ENUM_MARKER.exec(comment);
+  if (!marker) return null;
+  const values = comment
+    .slice(marker.index + marker[0].length)
+    .split(/[,、]/)
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+  return values.length > 0 ? values : null;
+}
 
 /** Mermaid lets identifiers be quoted; the identifier used for matching is the text inside the quotes. */
 export function normalizeIdentifier(raw: string): string {
@@ -44,9 +93,15 @@ export function parseErDiagram(source: string): ParsedDiagram {
   const referenced: string[] = [];
   const seen = new Set<string>();
   const relationships: Relationship[] = [];
+  const attributes = new Map<string, Attribute[]>();
 
   const lines = stripFrontmatter(source).split(/\r?\n/);
-  let inBlock = false;
+  let current: Attribute[] | null = null;
+
+  const addAttribute = (text: string) => {
+    const attribute = parseAttribute(text);
+    if (attribute && current) current.push(attribute);
+  };
 
   const reference = (id: string) => {
     if (!seen.has(id)) {
@@ -59,15 +114,26 @@ export function parseErDiagram(source: string): ParsedDiagram {
     const line = rawLine.replace(/%%.*$/, "").trim();
     if (!line) continue;
 
-    if (inBlock) {
-      if (line.startsWith("}")) inBlock = false;
+    if (current) {
+      if (line.startsWith("}")) current = null;
+      else addAttribute(line);
       continue;
     }
 
     const block = BLOCK_OPEN.exec(line);
     if (block) {
-      defined.add(normalizeIdentifier(block[1]));
-      inBlock = !block[2].trimEnd().endsWith("}");
+      const id = normalizeIdentifier(block[1]);
+      defined.add(id);
+      current = attributes.get(id) ?? [];
+      attributes.set(id, current);
+      const rest = block[2].trim();
+      if (rest.endsWith("}")) {
+        const inline = rest.slice(0, -1).trim();
+        if (inline) addAttribute(inline);
+        current = null;
+      } else if (rest) {
+        addAttribute(rest);
+      }
       continue;
     }
 
@@ -81,7 +147,7 @@ export function parseErDiagram(source: string): ParsedDiagram {
     }
   }
 
-  return { defined, referenced, relationships };
+  return { defined, referenced, relationships, attributes };
 }
 
 function stripFrontmatter(source: string): string {
