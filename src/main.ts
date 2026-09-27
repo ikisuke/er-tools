@@ -1,6 +1,7 @@
 import mermaid from "mermaid";
 import "./style.css";
 import { buildDefinitionIndex, loadGroups, resolveLinks, type DefinitionIndex, type LinkTarget, type LoadedGroup } from "./links";
+import { decorateEnumColumns, EnumPopover } from "./enums";
 import { entityIdFromNodeId } from "./svg";
 import { PanZoom } from "./panzoom";
 import { mermaidConfig } from "./theme";
@@ -28,8 +29,10 @@ let renderSeq = 0;
 
 mermaid.initialize(mermaidConfig());
 
+const enumPopover = new EnumPopover(document.querySelector<HTMLElement>("#enum-popover")!, stage);
 const panZoom = new PanZoom(stage, diagramEl, (view) => {
   zoomLevel.textContent = `${Math.round(view.scale * 100)}%`;
+  enumPopover.close();
 });
 document.querySelector("#zoom-in")!.addEventListener("click", () => panZoom.zoomIn());
 document.querySelector("#zoom-out")!.addEventListener("click", () => panZoom.zoomOut());
@@ -70,6 +73,7 @@ async function show(groupName: string, entity?: string) {
   cardFile.textContent = group.file ?? "";
   document.title = `${group.name} — ER ビューア`;
 
+  enumPopover.close();
   const seq = ++renderSeq;
   setStatus("図を描画しています…");
   try {
@@ -86,6 +90,9 @@ async function show(groupName: string, entity?: string) {
   }
 
   decorateLinks(resolveLinks(group, index));
+  for (const [id, node] of entityNodes()) {
+    decorateEnumColumns(node, id, group.parsed.attributes.get(id) ?? [], enumPopover);
+  }
   panZoom.fit(false);
   if (entity) revealEntity(entity);
 }

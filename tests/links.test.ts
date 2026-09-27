@@ -84,3 +84,13 @@ describe("example diagrams", () => {
     expect(viaManifest.warnings).toEqual([]);
   });
 });
+
+describe("example enum columns", () => {
+  it("carries enum values in attribute comments", () => {
+    const loaded = loadGroups(loadDiagramBundle("examples/diagrams").groups);
+    const column = (group: string, entity: string, name: string) =>
+      loaded.find((g) => g.name === group)!.parsed.attributes.get(entity)!.find((a) => a.name === name)!;
+    expect(column("orders", "ORDER", "status").enumValues).toEqual(["pending", "paid", "shipped", "cancelled"]);
+    expect(column("shipping", "SHIPMENT", "carrier").enumValues).toEqual(["yamato", "sagawa", "japan_post"]);
+  });
+});

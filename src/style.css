@@ -14,6 +14,10 @@
   --brand: #ff3670;
   --brand-soft: #fff0f4;
   --brand-ring: rgb(255 54 112 / 0.18);
+  --enum: #7a4fc9;
+  --enum-soft: #f1ebff;
+  --enum-border: #d9c9f7;
+  --enum-text: #4b2f8a;
   --link: #3f6fb5;
   --link-fill: #eef4fc;
   --link-fill-hover: #dde9f8;
@@ -403,6 +407,131 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   pointer-events: none;
+}
+
+/* Enum columns */
+.diagram g.er-enum {
+  cursor: pointer;
+}
+
+.diagram g.label.er-enum-name .nodeLabel,
+.diagram g.label.er-enum-name .nodeLabel p,
+.diagram g.label.attribute-comment.er-enum .nodeLabel,
+.diagram g.label.attribute-comment.er-enum .nodeLabel p {
+  color: var(--enum) !important;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.diagram g.er-enum:is(.row-rect-odd, .row-rect-even) > path:first-of-type {
+  transition: fill 0.12s;
+}
+
+.diagram g.er-enum-active:is(.row-rect-odd, .row-rect-even) > path:first-of-type,
+.diagram g.er-enum:is(.row-rect-odd, .row-rect-even):hover > path:first-of-type {
+  fill: var(--enum-soft) !important;
+}
+
+.diagram g.label.er-enum-name:focus {
+  outline: none;
+}
+
+.diagram g.label.er-enum-name:focus-visible .nodeLabel {
+  outline: 2px solid var(--enum);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.enum-popover {
+  position: absolute;
+  z-index: 3;
+  width: 16rem;
+  max-width: calc(100% - 1rem);
+  padding: 0.7rem 0.8rem 0.75rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--enum);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 4px 8px -4px rgb(16 24 40 / 0.06);
+  cursor: default;
+  user-select: text;
+}
+
+.enum-popover[hidden] {
+  display: none;
+}
+
+.enum-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.enum-popover-kicker {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--enum);
+}
+
+.enum-popover-close {
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.enum-popover-close:hover,
+.enum-popover-close:focus-visible {
+  outline: none;
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.enum-popover-title {
+  margin: 0.1rem 0 0.15rem;
+  font: 700 0.9rem var(--mono);
+  word-break: break-all;
+}
+
+.enum-popover-meta {
+  margin: 0 0 0.6rem;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.enum-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+
+.enum-values li {
+  padding: 0.18rem 0.5rem;
+  font: 0.78rem var(--mono);
+  color: var(--enum-text);
+  background: var(--enum-soft);
+  border: 1px solid var(--enum-border);
+  border-radius: 999px;
+}
+
+.enum-popover-source {
+  margin: 0;
+  padding-top: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  word-break: break-all;
 }
 
 /* Cross-group link entities */
