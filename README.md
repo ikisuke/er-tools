@@ -9,7 +9,7 @@
   - 同じ識別名を属性ブロック付きで定義しているグループが 1 つ → その図へ移動し、対象の表までスクロールして強調表示する
   - 複数ある → 候補を示して選ばせる
   - 無い → リンクにしない
-- 照合は図に書かれたノードの識別名で行います（`PRODUCT["商品"]` の場合は `PRODUCT`）。表示名や部分一致では判断しません。大文字小文字も区別します
+- 照合は図に書かれたノードの識別名で行います（`ROOM["部屋"]` の場合は `ROOM`）。表示名や部分一致では判断しません。大文字小文字も区別します
 - 属性のコメントに `enum: 値1, 値2, …` と書いた列は、点線の下線付きで表示し、押すと値の一覧を吹き出しで表示する（書き方は「ER 図の書き方」の 7）
 - 図は拡大縮小・移動できます（図の部分のみ）
   - マウスホイール: カーソル位置を中心に拡大縮小
@@ -64,8 +64,8 @@ npm run preview      # http://127.0.0.1:47322 で確認
 ```json
 {
   "groups": [
-    { "name": "顧客", "file": "diagrams/customers.mmd" },
-    { "name": "注文", "file": "diagrams/orders.mmd" }
+    { "name": "サークル", "file": "diagrams/circles.mmd" },
+    { "name": "会員", "file": "diagrams/members.mmd" }
   ]
 }
 ```
@@ -80,8 +80,8 @@ npm run preview      # http://127.0.0.1:47322 で確認
 - 使える拡張子は `.mmd` / `.mermaid` / `.md` / `.markdown` です
   - `.mmd` / `.mermaid`: ファイル全体を Mermaid の図として読みます（`erDiagram` を含まないファイルは読み飛ばします）
   - `.md` / `.markdown`: ```` ```mermaid ````（または `~~~mermaid`）のブロックのうち、`erDiagram` を含む**最初の 1 つ**だけを図として読みます。説明文は自由に書けますが、1 ファイルに複数のグループを入れることはできません
-- ディレクトリを指定した場合、グループ名はファイル名から拡張子を除いたものです（`orders.mmd` → `orders`）。読むのは直下のファイルだけで、サブディレクトリは見ません。一覧はファイル名順です
-- グループ名が重複したファイル（例: `orders.mmd` と `orders.md`）は、後のほうを読み飛ばして警告を出します
+- ディレクトリを指定した場合、グループ名はファイル名から拡張子を除いたものです（`circles.mmd` → `circles`）。読むのは直下のファイルだけで、サブディレクトリは見ません。一覧はファイル名順です
+- グループ名が重複したファイル（例: `circles.mmd` と `circles.md`）は、後のほうを読み飛ばして警告を出します
 
 ### 2. 自分のグループの表は「属性ブロック付き」で書く（= 定義）
 
@@ -89,14 +89,14 @@ npm run preview      # http://127.0.0.1:47322 で確認
 
 ```mermaid
 erDiagram
-    ORDER {
+    CIRCLE {
         int id PK
-        int customer_id FK
-        string status
+        string name
+        int contact_id FK
     }
 ```
 
-- 1 行で書いた `ORDER { int id PK }` や、中身が空の `ORDER { }` も定義として扱います
+- 1 行で書いた `CIRCLE { int id PK }` や、中身が空の `CIRCLE { }` も定義として扱います
 - 同じ表の列は、その表を定義するグループの図にだけ書きます
 
 ### 3. 他のグループの表は「関係線の中に識別名だけ」書く（= リンク）
@@ -105,28 +105,28 @@ erDiagram
 
 ```mermaid
 erDiagram
-    ORDER {
+    ACTIVITY {
         int id PK
-        int customer_id FK
+        int room_id FK
     }
-    CUSTOMER ||--o{ ORDER : "places"
+    ROOM ||--o{ ACTIVITY : "hosts"
 ```
 
-この図では `CUSTOMER` に属性ブロックが無いので、`CUSTOMER` を属性ブロック付きで書いているグループ（例: `customers`）へのリンクになります。
+この図では `ROOM` に属性ブロックが無いので、`ROOM` を属性ブロック付きで書いているグループ（例: `rooms`）へのリンクになります。
 
 - 関係線の書き方は Mermaid の `erDiagram` と同じです。記号（`||--o{`、`}o..|{` など。実線 `--` と点線 `..` のどちらでも可）と、語による書き方（`A one or more to zero or many B : ラベル`）のどちらも使えます
 - 関係線にはラベル（`:` の後ろ）が必要です。これは Mermaid の構文上の決まりです
 - 同じ図の中で属性ブロック付きで書いた表は、他のグループにも定義があってもリンクになりません（その図では「自分の表」だからです）
-- 関係線に出てこず、`WAREHOUSE` のように名前だけを 1 行で書いた表は、定義にもリンクにもなりません
+- 関係線に出てこず、`LOCKER` のように名前だけを 1 行で書いた表は、定義にもリンクにもなりません
 
 ### 4. 照合は「ノードの識別名」の完全一致
 
 定義とリンクは、図に書かれた**ノードの識別名**をそのまま突き合わせます。定義する側と参照する側で、同じ表は同じ識別名で書いてください。
 
-- 表示名は照合に使いません。`PRODUCT["商品"] { ... }` は画面には「商品」と表示されますが、識別名は `PRODUCT` です。他のグループからは `PRODUCT` と書けばリンクになります（`"商品"` と書いてもリンクになりません）
-- 大文字小文字を区別します。`order` と `ORDER` は別の表です
-- 部分一致や、前後の表記ゆれ（`ORDER` と `ORDERS` など）は同じ表とみなしません
-- 空白などを含む識別名は `"ORDER ITEM"` のように引用符で囲みます。照合には引用符の中身（`ORDER ITEM`）を使います
+- 表示名は照合に使いません。`ROOM["部屋"] { ... }` は画面には「部屋」と表示されますが、識別名は `ROOM` です。他のグループからは `ROOM` と書けばリンクになります（`"部屋"` と書いてもリンクになりません）
+- 大文字小文字を区別します。`room` と `ROOM` は別の表です
+- 部分一致や、前後の表記ゆれ（`ROOM` と `ROOMS` など）は同じ表とみなしません
+- 空白などを含む識別名は `"ROOM KEY"` のように引用符で囲みます。照合には引用符の中身（`ROOM KEY`）を使います
 
 ### 5. 定義が複数・定義が無いとき
 
@@ -141,7 +141,7 @@ erDiagram
 ### 6. 関係線のラベルはそのまま表示される
 
 - ラベルは図に書いた文字列のまま表示します。制約名などに読み替えたり、補ったりしません
-- 関係線が SQL の外部キー制約に対応しているかどうかは、図によって異なります。ツールは判断しません。外部キー名を見せたい場合は、ラベル自体に書いてください（例: `"ships to (fk_order_address)"`）
+- 関係線が SQL の外部キー制約に対応しているかどうかは、図によって異なります。ツールは判断しません。外部キー名を見せたい場合は、ラベル自体に書いてください（例: `"reached via (fk_circle_contact)"`）
 
 ### 7. enum の列は、値を属性のコメントに書く
 
@@ -149,18 +149,18 @@ erDiagram
 
 ```mermaid
 erDiagram
-    ORDER {
+    CIRCLE {
         int id PK
-        string status "enum: pending, paid, shipped, cancelled"
+        string meeting_day "enum: mon, tue, wed, thu, fri, sat, sun"
     }
-    SHIPMENT {
-        int id PK
-        string carrier "配送業者 enum: yamato, sagawa, japan_post"
+    MEMBERSHIP {
+        int member_id PK, FK
+        string role "役割 enum: leader, member, guest"
     }
 ```
 
 - 書く場所は、属性の行の最後にある `"..."`（Mermaid の属性コメント）です。型・列名・キー（`PK` / `FK` / `UK`）の後ろに置きます（例: `int kind FK "enum: a, b"`）
-- コメントの中の `enum:` より後ろが値の並びです。`enum:` の前には説明を自由に書けます（上の `配送業者`）
+- コメントの中の `enum:` より後ろが値の並びです。`enum:` の前には説明を自由に書けます（上の `役割`）
 - 値は `,`（半角カンマ）か `、` で区切ります。前後の空白は無視し、空の値は捨てます
 - `enum:` は大文字小文字を区別せず、`:` の前に空白があっても構いません（`ENUM :` も可）。ただし `:` は半角です
 - 型は何でも構いません（`string`、`enum`、`order_status` など）。型を `enum` にしただけでは値は分かりません。値は必ずコメントに書いてください
@@ -191,23 +191,22 @@ ER_DIAGRAMS=/path/to/manifest.json npm run dev   # マニフェスト
 - [ ] リンクにならない表（点線枠にならない表）は、どのグループにも定義が無いことを確認した
 - [ ] enum の列には、属性のコメントに `enum: 値1, 値2, …` を書いた（押すと値の一覧が出ることを確認した）
 
-手本には同梱の例（次の節）を使ってください。`orders` の図に、一意に決まるリンク・候補選択になるリンク・リンクにならない表・enum の列がそろっています。
+手本には同梱の例（次の節）を使ってください。`circles` の図に、一意に決まるリンク・候補選択になるリンク・リンクにならない表・enum の列がそろっています。
 
 ## 同梱の例
 
-`examples/diagrams/` に 4 グループあります（`examples/manifest.json` は同じ図を日本語のグループ名で並べたマニフェスト）。
+`examples/diagrams/` に、公民館で活動するサークルを題材にした架空の 3 グループがあります（`examples/manifest.json` は同じ図を日本語のグループ名で並べたマニフェスト）。
 
 | グループ | 内容 |
 | --- | --- |
-| `customers` | 顧客と住所。`ORDER` が `orders` へのリンク |
-| `orders` | 注文と明細。`PRODUCT` は一意、`ADDRESS` は候補選択（`customers` と `shipping` の両方で定義）、`PAYMENT` はどこにも定義が無いためリンクなし。`ORDER.status` が enum の列 |
-| `catalog` | Markdown ファイルの例。`PRODUCT["商品"]` のように表示名を付けても識別名で照合 |
-| `shipping` | 倉庫・在庫・出荷。`ADDRESS` を `customers` と重複して定義している（`orders` の候補選択の元）。`SHIPMENT.carrier` は説明付きの enum の列 |
+| `circles` | サークルと活動日。`ROOM` は一意、`CONTACT` は候補選択（`members` と `rooms` の両方で定義）、`LOCKER` はどこにも定義が無いためリンクなし。`CIRCLE.meeting_day` が enum の列 |
+| `members` | 会員・連絡先・サークルへの所属。`CIRCLE` が `circles` へのリンク。`MEMBERSHIP.role` は説明付きの enum の列 |
+| `rooms` | Markdown ファイルの例。部屋・備品・部屋の管理連絡先。`ROOM["部屋"]` のように表示名を付けても識別名で照合。`CONTACT` を `members` と重複して定義している（`circles` の候補選択の元） |
 
-- **一意に決まる例**: `orders` の `PRODUCT` → `catalog` だけが定義しているので、押すと `catalog` の図へ移動します
-- **候補選択の例**: `orders` の `ADDRESS` → `customers` と `shipping` の両方が属性ブロック付きで定義しているので、どちらへ移動するか選ぶダイアログが出ます
-- **リンクにならない例**: `orders` の `PAYMENT` → どのグループにも定義が無いので、普通の表として表示されます
-- **enum の例**: `orders` の `ORDER.status`（`"enum: pending, paid, shipped, cancelled"`）と、`shipping` の `SHIPMENT.carrier`（`"配送業者 enum: yamato, sagawa, japan_post"`）→ 列を押すと値の一覧が出ます
+- **一意に決まる例**: `circles` の `ROOM` → `rooms` だけが定義しているので、押すと `rooms` の図へ移動します
+- **候補選択の例**: `circles` の `CONTACT` → `members` と `rooms` の両方が属性ブロック付きで定義しているので、どちらへ移動するか選ぶダイアログが出ます
+- **リンクにならない例**: `circles` の `LOCKER` → どのグループにも定義が無いので、普通の表として表示されます
+- **enum の例**: `circles` の `CIRCLE.meeting_day`（`"enum: mon, tue, wed, thu, fri, sat, sun"`）と、`members` の `MEMBERSHIP.role`（`"役割 enum: leader, member, guest"`）→ 列を押すと値の一覧が出ます
 
 ## 開発
 
