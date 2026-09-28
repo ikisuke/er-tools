@@ -1,12 +1,58 @@
+<div align="center">
+
 # ER ビューア
 
-グループごとに分割された Mermaid の ER 図を、分割したまま横断して読むためのビューアです。図の中で「他のグループで定義された表」をリンクにし、押すとその表を定義しているグループの図へ移動します。図は読むだけで、書き換えません。
+**分割した Mermaid ER 図を、分割したまま横断して読む。**
 
-## できること
+図の中の「他のグループの表」を押すと、その表を定義している図へ移動できる、読むだけのビューアです。
+
+[![Mermaid erDiagram](https://img.shields.io/badge/Mermaid-erDiagram-ff3670?logo=mermaid&logoColor=white)](https://mermaid.js.org/syntax/entityRelationshipDiagram.html)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-646cff?logo=vite&logoColor=white)](https://vite.dev/)
+[![Vitest](https://img.shields.io/badge/tested_with-Vitest-6e9f18?logo=vitest&logoColor=white)](https://vitest.dev/)
+
+<img src="docs/demo.gif" alt="ER ビューアの操作デモ: サークルの図から部屋の図へのリンク移動、CONTACT の候補選択、拡大縮小、meeting_day の enum 値の表示" width="880">
+
+<sub>同梱の例（架空の公民館サークル）で、グループ間の移動 → 候補の選択 → 拡大縮小 → enum の値の表示 を操作しています</sub>
+
+</div>
+
+## 特長
+
+- **グループ間リンク** — 関係線にだけ出てくる表を押すと、その表を定義しているグループの図へ移動し、対象の表を中央に強調表示
+- **候補の選択** — 同じ表を複数のグループが定義していれば候補から選ぶ。どこにも定義が無ければリンクにしない
+- **識別名で照合** — `ROOM["部屋"]` のような表示名ではなく、図に書かれた識別名 `ROOM` の完全一致で突き合わせる
+- **enum の値** — 属性コメントに `enum: mon, tue, …` と書いた列を押すと、値の一覧を吹き出しで表示
+- **拡大縮小・移動** — マウスホイール、「縮小」「拡大」「全体表示」ボタン、ドラッグ
+- **読むだけ** — 図は書き換えない。読む図の置き場所（ディレクトリかマニフェスト）は `ER_DIAGRAMS` で指定
+- **静的サイト** — `npm run build` で `dist/` に書き出して、任意の静的サーバーで配信できる
+
+検索・絞り込み・書き出し・編集は範囲外です。
+
+## クイックスタート
+
+Node.js 22 以降が必要です。
+
+```bash
+git clone https://github.com/ikisuke/er-tools.git
+cd er-tools
+npm install
+npm run dev                                   # http://127.0.0.1:47321 で同梱の例を表示
+```
+
+自分の図を読むときは、図を置いたディレクトリを渡します。
+
+```bash
+ER_DIAGRAMS=/path/to/diagrams npm run dev
+```
+
+図の書き方は「[ER 図の書き方](#er-図の書き方グループ間リンクを効かせるには)」を見てください。
+
+## 動作の詳細
 
 - 図の置き場所にあるグループから 1 つを選び、その ER 図を Mermaid でそのまま描画する（列・関係線のラベルは元の図のとおり）
 - その図に属性ブロックが無く、関係線にだけ出てくる表をリンクにする
-  - 同じ識別名を属性ブロック付きで定義しているグループが 1 つ → その図へ移動し、対象の表までスクロールして強調表示する
+  - 同じ識別名を属性ブロック付きで定義しているグループが 1 つ → その図へ移動し、対象の表を中央に表示して強調表示する
   - 複数ある → 候補を示して選ばせる
   - 無い → リンクにしない
 - 照合は図に書かれたノードの識別名で行います（`ROOM["部屋"]` の場合は `ROOM`）。表示名や部分一致では判断しません。大文字小文字も区別します
@@ -18,28 +64,7 @@
   - グループを開いたときは全体表示、リンクで移動したときは対象の表を 100% 以上で中央に表示
 - 表示中のグループと表は URL（`#g=<グループ>&e=<表>`）に入るので、ブラウザの戻る/進むが使えます
 
-検索・絞り込み・書き出し・編集などは範囲外です。
-
-## 技術構成
-
-- **Vite + TypeScript**（UI フレームワークなし）と **mermaid** による静的サイト
-- 図の読み込みは Vite プラグイン（`plugin/diagram-source.ts`）が行い、`diagrams.json` として配信します
-  - 開発サーバーではリクエストのたびに読み直すため、図を作り直したらブラウザを再読み込みするだけで反映されます
-  - `npm run build` では、その時点の図を `dist/diagrams.json` に書き出します
-- 解析とリンク解決のロジックは `src/parse.ts`・`src/links.ts`・`src/svg.ts` に、拡大縮小の計算は `src/zoom.ts` にあり、Vitest で単体テストしています
-
-UI が 1 画面で状態も少ないため、フレームワークを入れず DOM を直接扱う構成にしています。
-
-## 使い方
-
-Node.js 22 以降が必要です。
-
-```bash
-npm install
-npm run dev          # http://127.0.0.1:47321 で同梱の例を表示
-```
-
-### 図の置き場所を指定する
+## 図の置き場所を指定する
 
 環境変数 `ER_DIAGRAMS` に、**ディレクトリ** か **マニフェスト（JSON）** のパスを渡します。未指定なら `examples/diagrams` を読みます。
 
@@ -163,7 +188,7 @@ erDiagram
 - コメントの中の `enum:` より後ろが値の並びです。`enum:` の前には説明を自由に書けます（上の `役割`）
 - 値は `,`（半角カンマ）か `、` で区切ります。前後の空白は無視し、空の値は捨てます
 - `enum:` は大文字小文字を区別せず、`:` の前に空白があっても構いません（`ENUM :` も可）。ただし `:` は半角です
-- 型は何でも構いません（`string`、`enum`、`order_status` など）。型を `enum` にしただけでは値は分かりません。値は必ずコメントに書いてください
+- 型は何でも構いません（`string`、`enum`、`weekday` など）。型を `enum` にしただけでは値は分かりません。値は必ずコメントに書いてください
 - Mermaid のコメントには `"` を入れられないため、値に `"` は使えません。値にカンマを含めることもできません
 - 値を書いた列は、図の中で列名とコメントが点線の下線付きになります。列を押す（またはキーボードで列名を選んで Enter）と、値の一覧が吹き出しで出ます。吹き出しは Esc、× ボタン、図の他の場所を押すと閉じます
 - コメント自体は Mermaid がいつもどおり図の中にそのまま表示します。ビューアは図の描画を変えません
@@ -208,9 +233,21 @@ ER_DIAGRAMS=/path/to/manifest.json npm run dev   # マニフェスト
 - **リンクにならない例**: `circles` の `LOCKER` → どのグループにも定義が無いので、普通の表として表示されます
 - **enum の例**: `circles` の `CIRCLE.meeting_day`（`"enum: mon, tue, wed, thu, fri, sat, sun"`）と、`members` の `MEMBERSHIP.role`（`"役割 enum: leader, member, guest"`）→ 列を押すと値の一覧が出ます
 
+## 技術構成
+
+- **Vite + TypeScript**（UI フレームワークなし）と **mermaid** による静的サイト
+- 図の読み込みは Vite プラグイン（`plugin/diagram-source.ts`）が行い、`diagrams.json` として配信します
+  - 開発サーバーではリクエストのたびに読み直すため、図を作り直したらブラウザを再読み込みするだけで反映されます
+  - `npm run build` では、その時点の図を `dist/diagrams.json` に書き出します
+- 解析とリンク解決のロジックは `src/parse.ts`・`src/links.ts`・`src/svg.ts` に、拡大縮小の計算は `src/zoom.ts` にあり、Vitest で単体テストしています
+
+UI が 1 画面で状態も少ないため、フレームワークを入れず DOM を直接扱う構成にしています。
+
 ## 開発
 
 ```bash
 npm test             # 単体テスト（Vitest）
 npm run typecheck    # 型チェック
 ```
+
+冒頭の `docs/demo.gif` は、同梱の例を開発サーバーで表示し、実際に操作した画面を録画したものです。
