@@ -1,90 +1,94 @@
 <div align="center">
 
-# ER ビューア
+[日本語](README.ja.md) | **English**
 
-**分割した Mermaid ER 図を、分割したまま横断して読む。**
+# ER Viewer
 
-図の中の「他のグループの表」を押すと、その表を定義している図へ移動できる、読むだけのビューアです。
+**Read split Mermaid ER diagrams across groups — without merging them.**
+
+A read-only viewer: click a table that belongs to another group, and jump to the diagram that defines it.
 
 [![Mermaid erDiagram](https://img.shields.io/badge/Mermaid-erDiagram-ff3670?logo=mermaid&logoColor=white)](https://mermaid.js.org/syntax/entityRelationshipDiagram.html)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-646cff?logo=vite&logoColor=white)](https://vite.dev/)
 [![Vitest](https://img.shields.io/badge/tested_with-Vitest-6e9f18?logo=vitest&logoColor=white)](https://vitest.dev/)
 
-<img src="docs/demo.gif" alt="ER ビューアの操作デモ: サークルの図から部屋の図へのリンク移動、CONTACT の候補選択、拡大縮小、meeting_day の enum 値の表示" width="880">
+<img src="docs/demo.gif" alt="ER Viewer demo: jumping from the circles diagram to the rooms diagram, choosing between CONTACT candidates, zooming, and showing the enum values of meeting_day" width="880">
 
-<sub>同梱の例（架空の公民館サークル）で、グループ間の移動 → 候補の選択 → 拡大縮小 → enum の値の表示 を操作しています</sub>
+<sub>The bundled example (a fictional community-center club): cross-group jump → candidate chooser → zoom → enum values</sub>
 
 </div>
 
-## 特長
+> The viewer UI is in Japanese. Button labels are quoted below as they appear, with a translation, e.g. 「拡大」 (zoom in).
 
-- **グループ間リンク** — 関係線にだけ出てくる表を押すと、その表を定義しているグループの図へ移動し、対象の表を中央に強調表示
-- **候補の選択** — 同じ表を複数のグループが定義していれば候補から選ぶ。どこにも定義が無ければリンクにしない
-- **識別名で照合** — `ROOM["部屋"]` のような表示名ではなく、図に書かれた識別名 `ROOM` の完全一致で突き合わせる
-- **enum の値** — 属性コメントに `enum: mon, tue, …` と書いた列を押すと、値の一覧を吹き出しで表示
-- **拡大縮小・移動** — マウスホイール、「縮小」「拡大」「全体表示」ボタン、ドラッグ
-- **読むだけ** — 図は書き換えない。読む図の置き場所（ディレクトリかマニフェスト）は `ER_DIAGRAMS` で指定
-- **静的サイト** — `npm run build` で `dist/` に書き出して、任意の静的サーバーで配信できる
+## Features
 
-検索・絞り込み・書き出し・編集は範囲外です。
+- **Cross-group links** — Click a table that appears only on relationship lines to jump to the group that defines it; the table is centered and highlighted
+- **Candidate chooser** — If several groups define the same table, you pick one. If no group defines it, it is not a link
+- **Matched by identifier** — Tables are matched by the exact identifier written in the diagram (`ROOM`), not by a display label such as `ROOM["部屋"]`
+- **Enum values** — Click a column whose attribute comment says `enum: mon, tue, …` to see its values in a popover
+- **Zoom and pan** — Mouse wheel, the 「縮小」 / 「拡大」 / 「全体表示」 (zoom out / zoom in / fit) buttons, and drag
+- **Read-only** — Diagrams are never modified. Point the viewer at a directory or a manifest with `ER_DIAGRAMS`
+- **Static site** — `npm run build` writes `dist/`, which any static server can host
 
-## クイックスタート
+Search, filtering, export and editing are out of scope.
 
-Node.js 22 以降が必要です。
+## Quick start
+
+Requires Node.js 22 or later.
 
 ```bash
 git clone https://github.com/ikisuke/er-tools.git
 cd er-tools
 npm install
-npm run dev                                   # http://127.0.0.1:47321 で同梱の例を表示
+npm run dev                                   # opens the bundled example at http://127.0.0.1:47321
 ```
 
-自分の図を読むときは、図を置いたディレクトリを渡します。
+To read your own diagrams, pass the directory that holds them:
 
 ```bash
 ER_DIAGRAMS=/path/to/diagrams npm run dev
 ```
 
-図の書き方は「[ER 図の書き方](#er-図の書き方グループ間リンクを効かせるには)」を見てください。
+See [Writing ER diagrams so cross-group links work](#writing-er-diagrams-so-cross-group-links-work) for how to author them.
 
-## 動作の詳細
+## How it behaves
 
-- 図の置き場所にあるグループから 1 つを選び、その ER 図を Mermaid でそのまま描画する（列・関係線のラベルは元の図のとおり）
-- その図に属性ブロックが無く、関係線にだけ出てくる表をリンクにする
-  - 同じ識別名を属性ブロック付きで定義しているグループが 1 つ → その図へ移動し、対象の表を中央に表示して強調表示する
-  - 複数ある → 候補を示して選ばせる
-  - 無い → リンクにしない
-- 照合は図に書かれたノードの識別名で行います（`ROOM["部屋"]` の場合は `ROOM`）。表示名や部分一致では判断しません。大文字小文字も区別します
-- 属性のコメントに `enum: 値1, 値2, …` と書いた列は、点線の下線付きで表示し、押すと値の一覧を吹き出しで表示する（書き方は「ER 図の書き方」の 7）
-- 図は拡大縮小・移動できます（図の部分のみ）
-  - マウスホイール: カーソル位置を中心に拡大縮小
-  - 右下の「縮小」「拡大」「全体表示」ボタン（全体表示は図全体が収まる倍率。最大 100%）
-  - ドラッグ: 図を移動（リンクの表の上から始めても移動になり、移動先へは飛びません）
-  - グループを開いたときは全体表示、リンクで移動したときは対象の表を 100% 以上で中央に表示
-- 表示中のグループと表は URL（`#g=<グループ>&e=<表>`）に入るので、ブラウザの戻る/進むが使えます
+- Pick one group from the diagram source; its ER diagram is rendered by Mermaid as written (columns and relationship labels are shown exactly as in the source)
+- A table that has no attribute block in that diagram and appears only on relationship lines becomes a link
+  - Exactly one group defines the identifier with an attribute block → jump to that diagram; the table is centered and highlighted
+  - Several groups define it → the viewer shows the candidates and lets you choose
+  - None → no link
+- Matching uses the node identifier written in the diagram (`ROOM` for `ROOM["部屋"]`). Display labels and partial matches are never used. Matching is case-sensitive
+- A column whose attribute comment contains `enum: value1, value2, …` gets a dotted underline; clicking it shows the values in a popover (see step 7 of the how-to)
+- The diagram can be zoomed and panned (the diagram area only)
+  - Mouse wheel: zoom around the cursor
+  - 「縮小」 / 「拡大」 / 「全体表示」 (zoom out / zoom in / fit) buttons at the bottom right. Fit shows the whole diagram, up to 100%
+  - Drag: pan the diagram (a drag that starts on a linked table pans; it does not follow the link)
+  - Opening a group fits the whole diagram; following a link centers the target table at 100% or more
+- The current group and table are kept in the URL (`#g=<group>&e=<table>`), so the browser's back/forward buttons work
 
-## 図の置き場所を指定する
+## Choosing the diagram source
 
-環境変数 `ER_DIAGRAMS` に、**ディレクトリ** か **マニフェスト（JSON）** のパスを渡します。未指定なら `examples/diagrams` を読みます。
+Set the `ER_DIAGRAMS` environment variable to a **directory** or a **manifest (JSON)**. If it is not set, `examples/diagrams` is used.
 
 ```bash
-# ディレクトリ: 直下の .mmd / .mermaid / .md / .markdown を 1 ファイル = 1 グループとして読む
+# Directory: each .mmd / .mermaid / .md / .markdown file directly inside is one group
 ER_DIAGRAMS=/path/to/diagrams npm run dev
 
-# マニフェスト: グループ名と並び順を指定する
+# Manifest: set group names and their order
 ER_DIAGRAMS=/path/to/manifest.json npm run dev
 
-# 静的ファイルとして書き出す（dist/ を任意の静的サーバーで配信）
+# Build static files (serve dist/ with any static server)
 ER_DIAGRAMS=/path/to/diagrams npm run build
-npm run preview      # http://127.0.0.1:47322 で確認
+npm run preview      # check at http://127.0.0.1:47322
 ```
 
-- ディレクトリ指定では、ファイル名（拡張子なし）がグループ名になります
-- `.md` / `.markdown` では、`erDiagram` を含む最初の ```` ```mermaid ```` ブロックを図として読みます
-- `erDiagram` が見つからないファイルや、グループ名の重複は読み飛ばし、画面上部に警告を出します
+- With a directory, the group name is the file name without its extension
+- For `.md` / `.markdown`, the first ```` ```mermaid ```` block containing `erDiagram` is used as the diagram
+- Files without `erDiagram` and files with duplicate group names are skipped, with a warning at the top of the screen
 
-マニフェストの形式（`file` はマニフェストからの相対パス）:
+Manifest format (`file` is relative to the manifest):
 
 ```json
 {
@@ -95,22 +99,22 @@ npm run preview      # http://127.0.0.1:47322 で確認
 }
 ```
 
-## ER 図の書き方（グループ間リンクを効かせるには）
+## Writing ER diagrams so cross-group links work
 
-このビューアは、次の書き方で作られた図を前提にしています。ツールはこの書き方を強制せず、図の内容の正しさも判断しません。書き方が違うと、リンクが付かないか、意図しない表がリンクになります。
+The viewer assumes diagrams written the following way. It does not enforce this convention and does not judge whether a diagram is correct. If a diagram is written differently, links may be missing or unintended tables may become links.
 
-### 1. 1 グループ = 1 ファイル
+### 1. One group = one file
 
-- 1 つのグループにつき 1 枚の ER 図を、1 ファイルに書きます
-- 使える拡張子は `.mmd` / `.mermaid` / `.md` / `.markdown` です
-  - `.mmd` / `.mermaid`: ファイル全体を Mermaid の図として読みます（`erDiagram` を含まないファイルは読み飛ばします）
-  - `.md` / `.markdown`: ```` ```mermaid ````（または `~~~mermaid`）のブロックのうち、`erDiagram` を含む**最初の 1 つ**だけを図として読みます。説明文は自由に書けますが、1 ファイルに複数のグループを入れることはできません
-- ディレクトリを指定した場合、グループ名はファイル名から拡張子を除いたものです（`circles.mmd` → `circles`）。読むのは直下のファイルだけで、サブディレクトリは見ません。一覧はファイル名順です
-- グループ名が重複したファイル（例: `circles.mmd` と `circles.md`）は、後のほうを読み飛ばして警告を出します
+- Write one ER diagram per group, one group per file
+- Supported extensions: `.mmd` / `.mermaid` / `.md` / `.markdown`
+  - `.mmd` / `.mermaid`: the whole file is read as a Mermaid diagram (files without `erDiagram` are skipped)
+  - `.md` / `.markdown`: only the **first** ```` ```mermaid ```` (or `~~~mermaid`) block that contains `erDiagram` is read. You can write any prose around it, but one file cannot hold more than one group
+- With a directory source, the group name is the file name without its extension (`circles.mmd` → `circles`). Only files directly inside the directory are read; subdirectories are ignored. Groups are listed in file-name order
+- If two files have the same group name (e.g. `circles.mmd` and `circles.md`), the later one is skipped with a warning
 
-### 2. 自分のグループの表は「属性ブロック付き」で書く（= 定義）
+### 2. Write your own group's tables with an attribute block (= definition)
 
-そのグループが持つ表は、列を並べた属性ブロック `{ ... }` 付きで書きます。**属性ブロックがあることが「この表はこのグループで定義されている」という印**になります。
+Tables owned by a group are written with an attribute block `{ ... }` listing their columns. **Having an attribute block is what marks a table as "defined in this group".**
 
 ```mermaid
 erDiagram
@@ -121,12 +125,12 @@ erDiagram
     }
 ```
 
-- 1 行で書いた `CIRCLE { int id PK }` や、中身が空の `CIRCLE { }` も定義として扱います
-- 同じ表の列は、その表を定義するグループの図にだけ書きます
+- A one-line `CIRCLE { int id PK }` and an empty `CIRCLE { }` also count as definitions
+- A table's columns are written only in the diagram of the group that defines it
 
-### 3. 他のグループの表は「関係線の中に識別名だけ」書く（= リンク）
+### 3. Write other groups' tables by identifier only, on relationship lines (= link)
 
-他のグループが持つ表は、属性ブロックを付けず、関係線の中に識別名だけを書きます。**その図に属性ブロックが無く、関係線にだけ出てくる表**が、定義しているグループへのリンクになります。
+Tables owned by other groups are written without an attribute block, by identifier only, on relationship lines. **A table that has no attribute block in the diagram and appears only on relationship lines** becomes a link to the group that defines it.
 
 ```mermaid
 erDiagram
@@ -137,40 +141,40 @@ erDiagram
     ROOM ||--o{ ACTIVITY : "hosts"
 ```
 
-この図では `ROOM` に属性ブロックが無いので、`ROOM` を属性ブロック付きで書いているグループ（例: `rooms`）へのリンクになります。
+Here `ROOM` has no attribute block, so it becomes a link to the group that writes `ROOM` with an attribute block (e.g. `rooms`).
 
-- 関係線の書き方は Mermaid の `erDiagram` と同じです。記号（`||--o{`、`}o..|{` など。実線 `--` と点線 `..` のどちらでも可）と、語による書き方（`A one or more to zero or many B : ラベル`）のどちらも使えます
-- 関係線にはラベル（`:` の後ろ）が必要です。これは Mermaid の構文上の決まりです
-- 同じ図の中で属性ブロック付きで書いた表は、他のグループにも定義があってもリンクになりません（その図では「自分の表」だからです）
-- 関係線に出てこず、`LOCKER` のように名前だけを 1 行で書いた表は、定義にもリンクにもなりません
+- Relationship lines use Mermaid `erDiagram` syntax. Both symbols (`||--o{`, `}o..|{`, etc.; solid `--` or dotted `..`) and the word form (`A one or more to zero or many B : label`) work
+- A relationship line needs a label (after the `:`). This is required by Mermaid's syntax
+- A table written with an attribute block in the same diagram is never a link, even if other groups define it too (it is "our own table" in that diagram)
+- A table that never appears on a relationship line and is written on its own line by name only, like `LOCKER`, is neither a definition nor a link
 
-### 4. 照合は「ノードの識別名」の完全一致
+### 4. Matching is an exact match on the node identifier
 
-定義とリンクは、図に書かれた**ノードの識別名**をそのまま突き合わせます。定義する側と参照する側で、同じ表は同じ識別名で書いてください。
+Definitions and links are matched by the **node identifier** exactly as written in the diagram. Write the same table with the same identifier on both the defining side and the referring side.
 
-- 表示名は照合に使いません。`ROOM["部屋"] { ... }` は画面には「部屋」と表示されますが、識別名は `ROOM` です。他のグループからは `ROOM` と書けばリンクになります（`"部屋"` と書いてもリンクになりません）
-- 大文字小文字を区別します。`room` と `ROOM` は別の表です
-- 部分一致や、前後の表記ゆれ（`ROOM` と `ROOMS` など）は同じ表とみなしません
-- 空白などを含む識別名は `"ROOM KEY"` のように引用符で囲みます。照合には引用符の中身（`ROOM KEY`）を使います
+- Display labels are not used for matching. `ROOM["部屋"] { ... }` is displayed as 「部屋」, but its identifier is `ROOM`. Other groups link to it by writing `ROOM` (writing `"部屋"` does not create a link)
+- Matching is case-sensitive: `room` and `ROOM` are different tables
+- Partial matches and spelling variants (such as `ROOM` vs. `ROOMS`) are not treated as the same table
+- Identifiers containing spaces are quoted, like `"ROOM KEY"`. The text inside the quotes (`ROOM KEY`) is used for matching
 
-### 5. 定義が複数・定義が無いとき
+### 5. When several groups define a table, or none does
 
-| 属性ブロック付きで定義しているグループ | ビューアの動き |
+| Groups defining it with an attribute block | What the viewer does |
 | --- | --- |
-| 1 つ | リンクになり、押すとそのグループの図へ移動して、対象の表を中央に強調表示する |
-| 複数 | リンクになり、押すと候補のグループ一覧を出して選んでもらう（どれかを勝手に選ばない） |
-| 無い | リンクにしない（図の側の欠落として扱い、ツールは補わない） |
+| One | It is a link; clicking it jumps to that group's diagram and centers and highlights the table |
+| Several | It is a link; clicking it shows the list of candidate groups so you can choose (the viewer never picks one on its own) |
+| None | No link (treated as something missing from the diagrams; the tool does not fill it in) |
 
-同じ識別名を複数のグループで定義するのは、意図してそうする場合だけにしてください。意図しない重複は、どちらかの図で属性ブロックを外すと解消します。
+Define the same identifier in several groups only when you mean to. To remove an unintended duplicate, drop the attribute block from one of the diagrams.
 
-### 6. 関係線のラベルはそのまま表示される
+### 6. Relationship labels are shown verbatim
 
-- ラベルは図に書いた文字列のまま表示します。制約名などに読み替えたり、補ったりしません
-- 関係線が SQL の外部キー制約に対応しているかどうかは、図によって異なります。ツールは判断しません。外部キー名を見せたい場合は、ラベル自体に書いてください（例: `"reached via (fk_circle_contact)"`）
+- Labels are shown exactly as written. They are not rewritten into constraint names or filled in
+- Whether a relationship line corresponds to an SQL foreign-key constraint depends on the diagram. The tool does not decide. If you want to show a foreign-key name, put it in the label itself (e.g. `"reached via (fk_circle_contact)"`)
 
-### 7. enum の列は、値を属性のコメントに書く
+### 7. For enum columns, write the values in the attribute comment
 
-列が enum（取りうる値が決まっている列）なら、その値を**属性のコメントに `enum:` に続けて**書きます。ビューアが読むのは図に書かれた内容だけです。データベースのスキーマなど、図の外から値を推測することはしません。
+If a column is an enum (it has a fixed set of values), write the values **in the attribute comment, after `enum:`**. The viewer only reads what is written in the diagram; it never infers values from outside the diagram, such as a database schema.
 
 ```mermaid
 erDiagram
@@ -184,70 +188,70 @@ erDiagram
     }
 ```
 
-- 書く場所は、属性の行の最後にある `"..."`（Mermaid の属性コメント）です。型・列名・キー（`PK` / `FK` / `UK`）の後ろに置きます（例: `int kind FK "enum: a, b"`）
-- コメントの中の `enum:` より後ろが値の並びです。`enum:` の前には説明を自由に書けます（上の `役割`）
-- 値は `,`（半角カンマ）か `、` で区切ります。前後の空白は無視し、空の値は捨てます
-- `enum:` は大文字小文字を区別せず、`:` の前に空白があっても構いません（`ENUM :` も可）。ただし `:` は半角です
-- 型は何でも構いません（`string`、`enum`、`weekday` など）。型を `enum` にしただけでは値は分かりません。値は必ずコメントに書いてください
-- Mermaid のコメントには `"` を入れられないため、値に `"` は使えません。値にカンマを含めることもできません
-- 値を書いた列は、図の中で列名とコメントが点線の下線付きになります。列を押す（またはキーボードで列名を選んで Enter）と、値の一覧が吹き出しで出ます。吹き出しは Esc、× ボタン、図の他の場所を押すと閉じます
-- コメント自体は Mermaid がいつもどおり図の中にそのまま表示します。ビューアは図の描画を変えません
-- enum の列は、その表を定義している図（属性ブロックのある図）にだけ書きます。リンクになる側の表には列を書かないためです
+- The values go in the `"..."` at the end of the attribute line (Mermaid's attribute comment), after the type, column name and keys (`PK` / `FK` / `UK`) (e.g. `int kind FK "enum: a, b"`)
+- Everything after `enum:` in the comment is the list of values. Any description can come before `enum:` (`役割`, "role", above)
+- Separate values with `,` (ASCII comma) or `、`. Surrounding spaces are ignored and empty values are dropped
+- `enum:` is case-insensitive and may have spaces before the `:` (`ENUM :` also works). The `:` must be ASCII
+- The type can be anything (`string`, `enum`, `weekday`, …). A type of `enum` alone does not tell the viewer the values; always write them in the comment
+- Mermaid comments cannot contain `"`, so values cannot contain `"`. Values cannot contain commas either
+- In the diagram, the column name and comment of such a column get a dotted underline. Click the column (or focus the column name with the keyboard and press Enter) to see the values in a popover. Close it with Esc, the × button, or by clicking elsewhere in the diagram
+- Mermaid still draws the comment itself in the diagram as usual; the viewer does not change how the diagram is drawn
+- Write enum columns only in the diagram that defines the table (the one with the attribute block), since linked tables have no columns
 
-### 8. ビューアに図の置き場所を渡す
+### 8. Point the viewer at your diagrams
 
-書いた図を置いたディレクトリか、グループ名と並び順を指定したマニフェストを、環境変数 `ER_DIAGRAMS` で渡します（詳しくは上の「図の置き場所を指定する」）。
+Pass the directory holding your diagrams, or a manifest that sets group names and order, in the `ER_DIAGRAMS` environment variable (see [Choosing the diagram source](#choosing-the-diagram-source)).
 
 ```bash
-ER_DIAGRAMS=/path/to/diagrams npm run dev        # ディレクトリ
-ER_DIAGRAMS=/path/to/manifest.json npm run dev   # マニフェスト
+ER_DIAGRAMS=/path/to/diagrams npm run dev        # directory
+ER_DIAGRAMS=/path/to/manifest.json npm run dev   # manifest
 ```
 
-- マニフェストでは `name` がそのままグループ名になり、候補一覧もマニフェストに書いた順に並びます
-- 開発サーバーは読み込みのたびに図を読み直すので、図を直したらブラウザを再読み込みするだけで確かめられます
-- 構文の誤りで Mermaid が描画できない図は、画面にエラーの内容を表示します
+- With a manifest, `name` is used as the group name, and candidates are listed in manifest order
+- The dev server re-reads the diagrams on every load, so after editing a diagram just reload the browser
+- If Mermaid cannot render a diagram because of a syntax error, the error is shown on screen
 
-### 書いたら確かめること
+### Checklist
 
-- [ ] 自分のグループの表は、すべて属性ブロック付きで書いた
-- [ ] 他のグループの表には、属性ブロックを付けていない
-- [ ] 他のグループの表の識別名が、定義している図の識別名と一字一句（大文字小文字も）同じ
-- [ ] 同じ識別名を複数のグループで定義しているのは、意図したものだけ
-- [ ] リンクにならない表（点線枠にならない表）は、どのグループにも定義が無いことを確認した
-- [ ] enum の列には、属性のコメントに `enum: 値1, 値2, …` を書いた（押すと値の一覧が出ることを確認した）
+- [ ] Every table owned by your group is written with an attribute block
+- [ ] Tables owned by other groups have no attribute block
+- [ ] Each other-group table's identifier matches the defining diagram's identifier exactly, including case
+- [ ] The same identifier is defined in several groups only where intended
+- [ ] For each table that is not a link (no dashed border), you confirmed that no group defines it
+- [ ] Enum columns have `enum: value1, value2, …` in the attribute comment (and clicking shows the values)
 
-手本には同梱の例（次の節）を使ってください。`circles` の図に、一意に決まるリンク・候補選択になるリンク・リンクにならない表・enum の列がそろっています。
+Use the bundled examples (next section) as a reference. The `circles` diagram contains a unique link, an ambiguous link with a chooser, a table with no link, and an enum column.
 
-## 同梱の例
+## Bundled examples
 
-`examples/diagrams/` に、公民館で活動するサークルを題材にした架空の 3 グループがあります（`examples/manifest.json` は同じ図を日本語のグループ名で並べたマニフェスト）。
+`examples/diagrams/` contains three fictional groups about clubs that meet at a community center (`examples/manifest.json` lists the same diagrams with Japanese group names).
 
-| グループ | 内容 |
+| Group | Contents |
 | --- | --- |
-| `circles` | サークルと活動日。`ROOM` は一意、`CONTACT` は候補選択（`members` と `rooms` の両方で定義）、`LOCKER` はどこにも定義が無いためリンクなし。`CIRCLE.meeting_day` が enum の列 |
-| `members` | 会員・連絡先・サークルへの所属。`CIRCLE` が `circles` へのリンク。`MEMBERSHIP.role` は説明付きの enum の列 |
-| `rooms` | Markdown ファイルの例。部屋・備品・部屋の管理連絡先。`ROOM["部屋"]` のように表示名を付けても識別名で照合。`CONTACT` を `members` と重複して定義している（`circles` の候補選択の元） |
+| `circles` | Clubs and activity days. `ROOM` is unique, `CONTACT` needs a choice (defined in both `members` and `rooms`), `LOCKER` is not a link because no group defines it. `CIRCLE.meeting_day` is an enum column |
+| `members` | Members, contacts and club memberships. `CIRCLE` links to `circles`. `MEMBERSHIP.role` is an enum column with a description |
+| `rooms` | A Markdown file example: rooms, equipment and room-manager contacts. Matched by identifier even with a display label like `ROOM["部屋"]`. Defines `CONTACT`, which `members` also defines (the reason `circles` shows a chooser) |
 
-- **一意に決まる例**: `circles` の `ROOM` → `rooms` だけが定義しているので、押すと `rooms` の図へ移動します
-- **候補選択の例**: `circles` の `CONTACT` → `members` と `rooms` の両方が属性ブロック付きで定義しているので、どちらへ移動するか選ぶダイアログが出ます
-- **リンクにならない例**: `circles` の `LOCKER` → どのグループにも定義が無いので、普通の表として表示されます
-- **enum の例**: `circles` の `CIRCLE.meeting_day`（`"enum: mon, tue, wed, thu, fri, sat, sun"`）と、`members` の `MEMBERSHIP.role`（`"役割 enum: leader, member, guest"`）→ 列を押すと値の一覧が出ます
+- **Unique link**: `ROOM` in `circles` → only `rooms` defines it, so clicking it jumps to the `rooms` diagram
+- **Candidate chooser**: `CONTACT` in `circles` → both `members` and `rooms` define it with an attribute block, so a dialog asks which one to open
+- **No link**: `LOCKER` in `circles` → no group defines it, so it is shown as a plain table
+- **Enum**: `CIRCLE.meeting_day` in `circles` (`"enum: mon, tue, wed, thu, fri, sat, sun"`) and `MEMBERSHIP.role` in `members` (`"役割 enum: leader, member, guest"`) → click the column to see its values
 
-## 技術構成
+## Tech stack
 
-- **Vite + TypeScript**（UI フレームワークなし）と **mermaid** による静的サイト
-- 図の読み込みは Vite プラグイン（`plugin/diagram-source.ts`）が行い、`diagrams.json` として配信します
-  - 開発サーバーではリクエストのたびに読み直すため、図を作り直したらブラウザを再読み込みするだけで反映されます
-  - `npm run build` では、その時点の図を `dist/diagrams.json` に書き出します
-- 解析とリンク解決のロジックは `src/parse.ts`・`src/links.ts`・`src/svg.ts` に、拡大縮小の計算は `src/zoom.ts` にあり、Vitest で単体テストしています
+- A static site built with **Vite + TypeScript** (no UI framework) and **mermaid**
+- Diagrams are loaded by a Vite plugin (`plugin/diagram-source.ts`) and served as `diagrams.json`
+  - The dev server re-reads them on every request, so regenerated diagrams show up after a browser reload
+  - `npm run build` writes the diagrams as they are at build time to `dist/diagrams.json`
+- Parsing and link resolution live in `src/parse.ts`, `src/links.ts` and `src/svg.ts`, zoom math in `src/zoom.ts`; all are unit-tested with Vitest
 
-UI が 1 画面で状態も少ないため、フレームワークを入れず DOM を直接扱う構成にしています。
+The UI is a single screen with little state, so it works with the DOM directly instead of using a framework.
 
-## 開発
+## Development
 
 ```bash
-npm test             # 単体テスト（Vitest）
-npm run typecheck    # 型チェック
+npm test             # unit tests (Vitest)
+npm run typecheck    # type check
 ```
 
-冒頭の `docs/demo.gif` は、同梱の例を開発サーバーで表示し、実際に操作した画面を録画したものです。
+The `docs/demo.gif` at the top is a recording of the bundled example running on the dev server and being used for real.
