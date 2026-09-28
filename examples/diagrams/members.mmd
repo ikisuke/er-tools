@@ -1,0 +1,21 @@
+%% 会員グループ: 公民館の利用会員と、サークルへの所属
+erDiagram
+    MEMBER {
+        int id PK
+        string name
+        date joined_on
+    }
+    CONTACT {
+        int id PK
+        int member_id FK
+        string phone
+        string relation
+    }
+    MEMBERSHIP {
+        int member_id PK, FK
+        int circle_id PK, FK
+        string role "役割 enum: leader, member, guest"
+    }
+    MEMBER ||--o{ CONTACT : "has"
+    MEMBER ||--o{ MEMBERSHIP : "joins as"
+    CIRCLE ||--o{ MEMBERSHIP : "has"

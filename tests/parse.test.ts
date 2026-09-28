@@ -4,15 +4,15 @@ import { extractMermaid, parseAttribute, parseEnumValues, parseErDiagram } from 
 describe("parseErDiagram", () => {
   it("separates entities with attribute blocks from relationship-only entities", () => {
     const parsed = parseErDiagram(`erDiagram
-      ORDER {
+      CIRCLE {
         int id PK
-        string status
+        string name
       }
-      CUSTOMER ||--o{ ORDER : places
-      ORDER ||--|{ ORDER_LINE : "contains"
+      MEMBER ||--o{ CIRCLE : leads
+      CIRCLE ||--|{ ACTIVITY : "holds"
     `);
-    expect([...parsed.defined]).toEqual(["ORDER"]);
-    expect(parsed.referenced).toEqual(["CUSTOMER", "ORDER", "ORDER_LINE"]);
+    expect([...parsed.defined]).toEqual(["CIRCLE"]);
+    expect(parsed.referenced).toEqual(["MEMBER", "CIRCLE", "ACTIVITY"]);
   });
 
   it("keeps relationship labels verbatim", () => {
@@ -30,14 +30,14 @@ describe("parseErDiagram", () => {
 
   it("uses the node identifier, not the alias, and unquotes quoted identifiers", () => {
     const parsed = parseErDiagram(`erDiagram
-      PRODUCT["商品"] {
+      ROOM["部屋"] {
         int id PK
       }
-      "ORDER ITEM" }o--|| PRODUCT["商品"] : refers
-      "SHOP-MASTER" ||--o{ "ORDER ITEM" : sells
+      "ROOM KEY" }o--|| ROOM["部屋"] : opens
+      "FRONT-DESK" ||--o{ "ROOM KEY" : lends
     `);
-    expect([...parsed.defined]).toEqual(["PRODUCT"]);
-    expect(parsed.referenced).toEqual(["ORDER ITEM", "PRODUCT", "SHOP-MASTER"]);
+    expect([...parsed.defined]).toEqual(["ROOM"]);
+    expect(parsed.referenced).toEqual(["ROOM KEY", "ROOM", "FRONT-DESK"]);
   });
 
   it("supports word-form cardinalities", () => {
@@ -102,48 +102,48 @@ describe("extractMermaid", () => {
 
 describe("attributes and enum values", () => {
   it("parses attribute rows with keys and comments", () => {
-    expect(parseAttribute('int order_id PK, FK "注文"')).toEqual({
+    expect(parseAttribute('int circle_id PK, FK "サークル"')).toEqual({
       type: "int",
-      name: "order_id",
+      name: "circle_id",
       keys: ["PK", "FK"],
-      comment: "注文",
+      comment: "サークル",
     });
     expect(parseAttribute("varchar(255) name")).toEqual({ type: "varchar(255)", name: "name", keys: [] });
     expect(parseAttribute("not an attribute row with many words")).toBeNull();
   });
 
   it("reads enum values from the comment", () => {
-    expect(parseEnumValues("enum: pending, paid, shipped")).toEqual(["pending", "paid", "shipped"]);
-    expect(parseEnumValues("配送業者 enum: yamato、sagawa, japan_post")).toEqual(["yamato", "sagawa", "japan_post"]);
+    expect(parseEnumValues("enum: mon, tue, wed")).toEqual(["mon", "tue", "wed"]);
+    expect(parseEnumValues("活動曜日 enum: 土、日, 祝")).toEqual(["土", "日", "祝"]);
     expect(parseEnumValues("ENUM : a ,b,, c ")).toEqual(["a", "b", "c"]);
   });
 
   it("ignores comments without values after the marker", () => {
-    expect(parseEnumValues("注文の状態")).toBeNull();
+    expect(parseEnumValues("活動の曜日")).toBeNull();
     expect(parseEnumValues("enum:")).toBeNull();
     expect(parseEnumValues("enumeration of states")).toBeNull();
   });
 
   it("does not infer values from the type alone", () => {
-    expect(parseAttribute("enum status")?.enumValues).toBeUndefined();
+    expect(parseAttribute("enum meeting_day")?.enumValues).toBeUndefined();
   });
 
   it("collects attributes per entity, including one-line blocks, in written order", () => {
     const parsed = parseErDiagram(`erDiagram
-      ORDER {
+      CIRCLE {
         int id PK
-        string status "enum: pending, paid"
+        string meeting_day "enum: sat, sun"
       }
       TAG { string kind "enum: a, b" }
       EMPTY { }
-      ORDER ||--o{ LINE : has
+      CIRCLE ||--o{ ACTIVITY : holds
     `);
-    expect(parsed.attributes.get("ORDER")?.map((a) => [a.name, a.enumValues])).toEqual([
+    expect(parsed.attributes.get("CIRCLE")?.map((a) => [a.name, a.enumValues])).toEqual([
       ["id", undefined],
-      ["status", ["pending", "paid"]],
+      ["meeting_day", ["sat", "sun"]],
     ]);
     expect(parsed.attributes.get("TAG")?.[0].enumValues).toEqual(["a", "b"]);
     expect(parsed.attributes.get("EMPTY")).toEqual([]);
-    expect(parsed.attributes.has("LINE")).toBe(false);
+    expect(parsed.attributes.has("ACTIVITY")).toBe(false);
   });
 });

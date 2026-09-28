@@ -1,0 +1,22 @@
+%% サークルグループ: 公民館で活動するサークルと活動日
+%% CONTACT は members と rooms の両方で定義されている（リンク先が一意に決まらない例）
+%% LOCKER はどのグループでも定義されていない（リンクにならない例）
+erDiagram
+    CIRCLE {
+        int id PK
+        string name
+        int contact_id FK
+        string meeting_day "enum: mon, tue, wed, thu, fri, sat, sun"
+    }
+    ACTIVITY {
+        int id PK
+        int circle_id FK
+        int room_id FK
+        date held_on
+        int attendance
+    }
+    CIRCLE ||--o{ ACTIVITY : "holds"
+    ROOM ||--o{ ACTIVITY : "hosts"
+    CIRCLE ||--o{ MEMBERSHIP : "has"
+    CONTACT |o--o{ CIRCLE : "reached via (fk_circle_contact)"
+    ACTIVITY ||--o| LOCKER : "stores gear in"
